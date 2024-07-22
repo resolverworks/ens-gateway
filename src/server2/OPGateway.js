@@ -5,12 +5,14 @@ import {Expander} from '../evm-storage.js';
 
 const ABI_CODER = ethers.AbiCoder.defaultAbiCoder();
 
-function decodeFetcher(index, target, commands, constants) {
+function decodeFetcher(index, target, commands, constants, proof) {
     const cmdhash = ethers.solidityPackedKeccak256(['address', 'bytes[]'], [target, commands]);
     console.log('cmdhash', cmdhash);
     console.log('index', index);
     console.log('target', target);
     console.log('commands', commands);
+    console.log('constants', constants);
+    console.log('proof', proof);
 }
 
 export class OPGateway extends EZCCIP {
@@ -34,7 +36,6 @@ export class OPGateway extends EZCCIP {
 		this.call_cache = new SmartCache({max_cached: 100});
 		this.output_cache = new SmartCache({ms: 60*60000, max_cached: 10});
 		this.register(`getStorageSlots(bytes context, address target, bytes32[] commands, bytes[] constants) external view returns (bytes)`, async ([index, target, commands, constants], context, history) => {
-			decodeFetcher(index, target, commands, constants);
 			let hash = ethers.keccak256(context.calldata);
 			history.show = [hash];
 			return this.call_cache.get(hash, async () => {
@@ -44,6 +45,7 @@ export class OPGateway extends EZCCIP {
 				let output = await this.output_cache.get(index, x => this.fetch_output(x));
 				let slots = await new Expander(this.provider2, target, output.block, output.slot_cache).expand(commands, constants);
 				let proof = await this.provider2.send('eth_getProof', [target, slots.map(x => ethers.toBeHex(x)), output.block]);
+				decodeFetcher(index, target, commands, constants, proof);
 				let witness = ABI_CODER.encode(
 					[
 						'tuple(bytes32 version, bytes32 stateRoot, bytes32 messagePasserStorageRoot, bytes32 latestBlockhash)',
