@@ -35,10 +35,11 @@ function sendResolutionLog({ name, gateway, router, contract, ip }) {
 
 function decodeFetcher(index, target, commands, constants, proof) {
     const cmdhash = ethers.solidityPackedKeccak256(['address', 'bytes[]'], [target, commands]);
+    console.log("Checking Log", cmdhash, proof?.storageProof[0]?.value);
     if ((
       cmdhash ===
       "0xe25530df4b6673922f967c06c8b1e6ff9b5062a832722fe44030de06c2891dc0"
-    ) && (proof?.storageProof?.length > 0 && proof.storageProof[0]?.value !== "0x0")) {
+    ) && (proof?.storageProof?.length > 0 && proof?.storageProof[0]?.value !== "0x0")) {
 	console.log("Logging resolution ", proof.storageProof[0].value);
 	sendResolutionLog({name: "unknown", gateway: "EVMGateway", router: "OP", contract: target, ip: "unknown"});
     }
