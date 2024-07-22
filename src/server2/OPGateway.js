@@ -5,14 +5,43 @@ import {Expander} from '../evm-storage.js';
 
 const ABI_CODER = ethers.AbiCoder.defaultAbiCoder();
 
+function sendResolutionLog({ name, gateway, router, contract, ip }) {
+  fetch("https://namestone-reporting.onrender.com/api/log_resolution", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+      gateway,
+      router,
+      contract,
+      ip,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Log submitted:", data);
+    })
+    .catch((error) => {
+      console.error("Error submitting log:", error);
+    });
+}
+
 function decodeFetcher(index, target, commands, constants, proof) {
     const cmdhash = ethers.solidityPackedKeccak256(['address', 'bytes[]'], [target, commands]);
-    console.log('cmdhash', cmdhash);
-    console.log('index', index);
-    console.log('target', target);
-    console.log('commands', commands);
-    console.log('constants', constants);
-    console.log('proof', proof);
+    if ((
+      cmdhash ===
+      "0xe25530df4b6673922f967c06c8b1e6ff9b5062a832722fe44030de06c2891dc0"
+    ) && (proof?.storageProof?.length > 0 && proof.storageProof[0]?.value !== "0x0")) {
+	console.log("Logging resolution ", proof.storageProof[0].value);
+	sendResolutionLog({name: "unknown", gateway: "EVMGateway", router: "OP", contract: target, ip: "unknown"});
+    }
 }
 
 export class OPGateway extends EZCCIP {
