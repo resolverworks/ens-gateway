@@ -8,6 +8,9 @@ const ABI_CODER = ethers.AbiCoder.defaultAbiCoder();
 function decodeFetcher(index, target, commands, constants) {
     const cmdhash = ethers.solidityPackedKeccak256(['address', 'bytes[]'], [target, commands]);
     console.log('cmdhash', cmdhash);
+    console.log('index', index);
+    console.log('target', target);
+    console.log('commands', commands);
 }
 
 export class OPGateway extends EZCCIP {
