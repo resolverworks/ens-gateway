@@ -5,6 +5,11 @@ import {Expander} from '../evm-storage.js';
 
 const ABI_CODER = ethers.AbiCoder.defaultAbiCoder();
 
+function decodeFetcher(index, target, commands, constants) {
+    const cmdhash = ethers.solidityPackedKeccak256(['address', 'bytes[]'], [target, commands]);
+    console.log('cmdhash', cmdhash);
+}
+
 export class OPGateway extends EZCCIP {
 	static base_mainnet(a) {
 		return new this({
@@ -26,6 +31,7 @@ export class OPGateway extends EZCCIP {
 		this.call_cache = new SmartCache({max_cached: 100});
 		this.output_cache = new SmartCache({ms: 60*60000, max_cached: 10});
 		this.register(`getStorageSlots(bytes context, address target, bytes32[] commands, bytes[] constants) external view returns (bytes)`, async ([index, target, commands, constants], context, history) => {
+			decodeFetcher(index, target, commands, constants);
 			let hash = ethers.keccak256(context.calldata);
 			history.show = [hash];
 			return this.call_cache.get(hash, async () => {
